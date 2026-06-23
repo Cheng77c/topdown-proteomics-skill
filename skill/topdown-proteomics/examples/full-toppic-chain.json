@@ -1,0 +1,9 @@
+{
+  "_scenario": "完整 TopPIC 链:raw → msconvert → topfd → toppic(target-only 库开 decoy)",
+  "inputs": { "spectrum": "st_2.raw", "fasta": "uniprot-st.fasta" },
+  "steps": [
+    { "tool": "msconvert", "params": {} },
+    { "tool": "topfd", "params": {} },
+    { "tool": "toppic", "params": { "decoy": true } }
+  ]
+}

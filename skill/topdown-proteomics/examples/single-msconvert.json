@@ -1,0 +1,7 @@
+{
+  "_scenario": "单工具:只做 raw → mzML 格式转换(filters 默认含 peakPicking 质心化)",
+  "inputs": { "spectrum": "st_2.raw" },
+  "steps": [
+    { "tool": "msconvert", "params": {} }
+  ]
+}

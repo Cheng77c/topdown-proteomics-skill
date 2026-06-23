@@ -1,0 +1,9 @@
+{
+  "_scenario": "主线 B,InformedProteomics 链:raw → pbfgen → promex → mspathfindert(tda=1 做 target-decoy FDR)",
+  "inputs": { "spectrum": "st_2.raw", "fasta": "uniprot-st.fasta" },
+  "steps": [
+    { "tool": "pbfgen", "params": {} },
+    { "tool": "promex", "params": {} },
+    { "tool": "mspathfindert", "params": { "tda": 1 } }
+  ]
+}

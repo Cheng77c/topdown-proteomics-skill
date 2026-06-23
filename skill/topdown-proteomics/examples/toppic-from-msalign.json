@@ -1,0 +1,7 @@
+{
+  "_scenario": "任意起点:已有反卷积结果,只跑 toppic。从 msalign 起步时 feature 必须显式给。",
+  "inputs": { "spectrum": "st_2_ms2.msalign", "fasta": "uniprot-st.fasta", "feature": "st_2_ms2.feature" },
+  "steps": [
+    { "tool": "toppic", "params": { "decoy": true } }
+  ]
+}

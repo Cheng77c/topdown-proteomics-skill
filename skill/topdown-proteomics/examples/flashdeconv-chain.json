@@ -1,0 +1,9 @@
+{
+  "_scenario": "FlashDeconv 替代 topfd:raw → msconvert → flashdeconv → toppic(执行器自动给 toppic 设 no_topfd_feature)",
+  "inputs": { "spectrum": "st_2.raw", "fasta": "uniprot-st.fasta" },
+  "steps": [
+    { "tool": "msconvert", "params": {} },
+    { "tool": "flashdeconv", "params": {} },
+    { "tool": "toppic", "params": { "decoy": true } }
+  ]
+}

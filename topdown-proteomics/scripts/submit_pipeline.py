@@ -95,6 +95,9 @@ def main():
     (wd / "job.json").write_text(json.dumps(job, ensure_ascii=False, indent=2))
 
     jid = _submit(str(wd))
+    # 上传包是一次性暂存:提交成功(已上传)后清掉,避免工作区残留 pipeline.json 副本 +
+    # 重复占盘的输入拷贝(submit 失败会在 _submit 内 sys.exit,保留 wd 供调试)。
+    shutil.rmtree(wd, ignore_errors=True)
     print(json.dumps({
         "ok": True, "jobId": jid, "status": "scheduling",
         "pollAfterMs": 20000, "nextTool": "poll_job.py",

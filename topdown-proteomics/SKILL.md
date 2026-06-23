@@ -109,6 +109,8 @@ python3 scripts/validate_pipeline.py --pipeline pipeline.json
 
 `submit_pipeline.py` 自动把 `inputs` 中的本地路径放入 `-p` 目录;`/bohr/…` 路径则作为 dataset 挂载引用,原样保留。
 
+> **上传暂存目录(`td-job/`)由 submit 自建、上传成功后自动清理**——你**不要**手动建、手动删、或把它当残留清理。提交后工作区只剩:你写的 `pipeline.json` + `upload/`(原始输入)+ `td-result/<jobId>/`(结果),这是正常且干净的。
+
 > **FASTA 必须走 `-p`,不可放 dataset。** TopPIC / MSPathFinderT 在搜索时会于 **FASTA 同目录**写入索引文件(`.fasta_idx`);dataset 为只读挂载,写索引将失败(`LOG ERROR: … fasta_idx could not be created`)。FASTA 体积通常为 KB–MB 级,放入 `-p` 即可;`make_dataset.py` 也会拒绝 FASTA 文件。
 
 仅**谱图**需要建 dataset:

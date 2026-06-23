@@ -229,11 +229,10 @@ python3 scripts/collect_results.py --job-id <JobId>
 - 不在 Bohrium 镜像库查找单工具镜像;一律使用配置的 `IMAGE_ADDRESS`(默认取自 `image.txt`)。
 - ACCESS_KEY 由平台注入,不写进 prompt/日志/文件。
 
-## 配置(openclaw.json)
-```json
-"topdown-proteomics": {
-  "enabled": true,
-  "env": { "ACCESS_KEY": "<注入>", "PROJECT_ID": "<你的项目ID>" }
-}
-```
-`ACCESS_KEY`、`PROJECT_ID` **必填**(无默认)。`IMAGE_ADDRESS` 可选:默认用 skill 的 `image.txt`(版本迭代改那一处);只在临时换版本时才在 env 里填。
+## 配置(由平台注入)
+本 skill 需要的配置在上方 frontmatter 的 `configFields` / `metadata.openclaw` 中声明,由平台(OpenClaw)以**环境变量**注入;sandbox 内经 `setup.sh` 落到 `/bohr-workspace/.bohr_env`,后续命令 `source` 即用:
+- `ACCESS_KEY`(`primaryEnv`,**必填**;平台亦可能注入 `BOHR_ACCESS_KEY`,脚本两者都认)
+- `PROJECT_ID`(**必填**,无默认——缺失时不得硬编码,向用户索取)
+- `IMAGE_ADDRESS`(可选,默认取 skill 的 `image.txt`,仅临时换版本时填)、`MACHINE_TYPE`(可选,默认 `c16_m32_cpu`)
+
+> 具体在何处填这些值,以平台的 skill 配置界面/文档为准(本 skill 不假设具体配置文件名)。

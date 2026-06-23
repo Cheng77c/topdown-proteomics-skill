@@ -1,1 +1,1 @@
-registry.dp.tech/dptech/dp/native/prod-3712867/topdown-pipeline:v3
+registry.dp.tech/dptech/dp/native/prod-3712867/topdown-pipeline:v5

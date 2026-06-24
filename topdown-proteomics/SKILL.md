@@ -50,7 +50,7 @@ l1: >
 1. **绝不手写 job.json / 绝不自己拼 `bohr job submit`** —— 一律 `scripts/submit_pipeline.py`。
 2. **绝不直接调工具**(msconvert/topfd/toppic…)—— 只经 `submit_pipeline.py` 提交。
 3. **大输入(.raw)先 `make_dataset.py` 再提交**;结果用 `collect_results.py` 取。
-4. **取结果只用 `collect_results.py`**:**绝不手动 `bohr job download` / 解压 zip / 拷贝产物**——手动会搞出 `dl/`、`out/out/`、散落到顶层的文件等混乱。collect 已给出 `result_dir`/`deliverable_paths`/`archive`,按它给的路径用即可。
+4. **取结果只用 `collect_results.py`**:**绝不手动 `bohr job download` / 解压 zip / 拷贝产物**——手动会造成 `dl/`、`out/out/`、散落到顶层的文件等混乱。collect 已给出 `result_dir`/`deliverable_paths`/`archive`,按它给的路径用即可。
 5. **标准流程不可跳**:`validate_pipeline.py` →(大输入)`make_dataset.py` → `submit_pipeline.py` → `poll_job.py` → `collect_results.py`。
 
 ## 何时用

@@ -8,7 +8,7 @@ if ! command -v bohr >/dev/null 2>&1 && [ ! -x "$HOME/.bohrium/bohr" ]; then
   /bin/bash -c "$(curl -fsSL https://dp-public.oss-cn-beijing.aliyuncs.com/bohrctl/1.0.0/install_bohr_linux_curl.sh)"
 fi
 
-# 镜像地址单一源:skill 根的 image.txt(版本迭代只改这一处)。env IMAGE_ADDRESS 可覆盖。
+# 镜像地址单一源:skill 根的 image.txt(版本迭代只改这一处)。临时换镜像在 submit 前命令级 export。
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 IMG_DEFAULT="$(cat "$HERE/../image.txt" 2>/dev/null | tr -d '[:space:]')"
 
@@ -17,6 +17,10 @@ ENVF=/bohr-workspace/.bohr_env
 # ★ 幂等保值:先载入已有 .bohr_env 把上次写好的值放回 shell,这样本次平台若没注入,
 #   下面的 ${VAR:-...} 会保留旧值,而不是用空值把好值冲掉(重复 setup 不再清空 key/项目)。
 [ -f "$ENVF" ] && . "$ENVF" 2>/dev/null || true
+# 例外:IMAGE_ADDRESS 不保值。它的单一源是 image.txt——若沿用 .bohr_env 缓存的旧 tag,
+# 会盖过 image.txt 更新(改了版本号却仍提交旧镜像)。每次以 image.txt 为准;临时换镜像在
+# submit 前命令级 `IMAGE_ADDRESS=… python3 submit_pipeline.py`,不持久化到 .bohr_env。
+IMAGE_ADDRESS="$IMG_DEFAULT"
 cat > "$ENVF" <<EOF
 export PATH="\$HOME/.bohrium:\$PATH"
 export OPENAPI_HOST=https://openapi.dp.tech

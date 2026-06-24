@@ -43,7 +43,9 @@ def main():
     ap.add_argument("--pipeline", required=True, help="agent 写好的 pipeline.json(inputs+steps)")
     ap.add_argument("--dataset-path", action="append", default=[], help="/bohr/<ds>/v1,可多次")
     ap.add_argument("--job-name", default="topdown")
-    ap.add_argument("--workdir", default="/bohr-workspace/td-job")
+    ap.add_argument("--workdir", default=None,
+                    help="打包目录(默认=pipeline.json 所在目录;每任务用独立子目录如 "
+                         "td-runs/<名>/,勿直接放 /bohr-workspace 根)")
     a = ap.parse_args()
 
     pipeline = json.loads(Path(a.pipeline).read_text())
@@ -62,17 +64,22 @@ def main():
     image = os.environ.get("IMAGE_ADDRESS", DEFAULT_IMAGE)
     machine = os.environ.get("MACHINE_TYPE", "c16_m32_cpu")
 
-    wd = Path(a.workdir)
-    if wd.exists():
-        shutil.rmtree(wd)
-    wd.mkdir(parents=True)
+    # 就地打包:默认用 pipeline.json 所在目录(per-task 自包含、并发安全、不散落根目录)。
+    # 不 rmtree(会删掉 pipeline.json 自己);约定每任务一个独立子目录,重提则覆盖同名打包物。
+    wd = Path(a.workdir).resolve() if a.workdir else Path(a.pipeline).resolve().parent
+    if wd == Path("/bohr-workspace"):
+        sys.exit("pipeline.json 须放进专属子目录(如 /bohr-workspace/td-runs/<任务名>/pipeline.json),"
+                 "勿直接放 /bohr-workspace 根——否则打包会把整个工作空间上传。")
+    wd.mkdir(parents=True, exist_ok=True)
 
     # 本地输入拷进上传包并改为包内相对名;/bohr 挂载路径保留
     inputs = pipeline.get("inputs") or {}
     for k, v in list(inputs.items()):
         if v and not str(v).startswith("/bohr/"):
-            src = Path(v)
-            shutil.copy(src, wd / src.name)
+            src = Path(v).resolve()
+            dst = wd / src.name
+            if src != dst.resolve():   # 就地打包时输入可能已在 wd,避免 copy 自己到自己
+                shutil.copy(src, dst)
             inputs[k] = src.name
     pipeline["inputs"] = inputs
     (wd / "pipeline.json").write_text(json.dumps(pipeline, ensure_ascii=False, indent=2))
@@ -95,9 +102,7 @@ def main():
     (wd / "job.json").write_text(json.dumps(job, ensure_ascii=False, indent=2))
 
     jid = _submit(str(wd))
-    # 上传包是一次性暂存:提交成功(已上传)后清掉,避免工作区残留 pipeline.json 副本 +
-    # 重复占盘的输入拷贝(submit 失败会在 _submit 内 sys.exit,保留 wd 供调试)。
-    shutil.rmtree(wd, ignore_errors=True)
+    # per-task 自包含:wd 即任务目录(含 pipeline.json + 输入 + 待 collect 回收的 result/),不清理。
     print(json.dumps({
         "ok": True, "jobId": jid, "status": "scheduling",
         "pollAfterMs": 20000, "nextTool": "poll_job.py",

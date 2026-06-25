@@ -87,7 +87,14 @@ source /bohr-workspace/.bohr_env   # 每个新 Bash 调用开头都要,确保 AC
 - **一条链满足请求即止**:用户要"完整鉴定",跑一条 TopPIC 链即可;**追加第二条链(如 InformedProteomics)须先 `AskUserInput` 征得同意**,不得自动消费额外算力。
 
 ### 3. 写 pipeline.json(关键:决定跑哪条链/哪些步/从哪起)
-按下方 schema 写一个 `pipeline.json`,放进工作目录。`steps` 是显式步骤列表,
+
+> **📁 工作目录约定(必守):每个任务用独立目录 `/bohr-workspace/td-runs/<任务名>/`,把 `pipeline.json`
+> 写进去**,不要散落在 `/bohr-workspace/` 根。`submit_pipeline.py` 会**就地打包该目录**(自包含、可并发、
+> 不互相覆盖);`collect_results.py --out <该目录>/result` 回收到同处。一个任务一个文件夹:
+> `/bohr-workspace/td-runs/toppic-run/{pipeline.json, job.json, 输入文件, result/}`。
+> (`submit` 会拒绝把 `/bohr-workspace` 根当打包目录——否则会上传整个工作空间。)
+
+按下方 schema 写一个 `pipeline.json`,放进任务目录。`steps` 是显式步骤列表,
 **支持单工具、任意起点、两条主线**(见「pipeline.json 编写」)。
 
 ### 3.5 提交前本地校验(必做,零成本)
@@ -124,8 +131,8 @@ python3 scripts/make_dataset.py --file <谱图路径.raw> --name <数据集名> 
 ### 5. 提交 job
 ```bash
 source /bohr-workspace/.bohr_env
-python3 scripts/submit_pipeline.py --pipeline pipeline.json [--dataset-path /bohr/<name>/v1]
-# 返回 {jobId, status, pollAfterMs}
+python3 scripts/submit_pipeline.py --pipeline /bohr-workspace/td-runs/<任务名>/pipeline.json [--dataset-path /bohr/<name>/v1]
+# pipeline.json 在任务目录里(见上方📁约定);submit 就地打包该目录。返回 {jobId, status, pollAfterMs}
 ```
 脚本将 **pipeline.json + 本地输入**置入 `-p` 上传目录,以配置的镜像提交;执行器位于镜像内,不随包上传。
 现成样例见 `examples/`(完整链 / flashdeconv / 任意起点 / 单工具 / InformedProteomics)。
@@ -144,8 +151,8 @@ python3 scripts/poll_job.py --job-id <JobId>   # 返回 status / done
 ### 7. 回收 + 汇报(bohr job download)
 ```bash
 source /bohr-workspace/.bohr_env
-python3 scripts/collect_results.py --job-id <JobId>
-# bohr job download 拉回并扁平化到 /bohr-workspace/td-result/<JobId>/out/,解析 summary.json,
+python3 scripts/collect_results.py --job-id <JobId> --out /bohr-workspace/td-runs/<任务名>/result
+# 回收到任务目录 <任务名>/result/out/(--out 省略则默认 /bohr-workspace/td-result/<JobId>/out/),解析 summary.json,
 # 返回 status + metrics(PrSM/proteoform/protein 或 IcTda 数)+ 交付物本地路径 + 版本告警
 ```
 - **每个 job 独占一目录** `td-result/<JobId>/`,内含:`out/`(**所有步骤产物** `00_msconvert/`、`01_topfd/`、`02_toppic/` …,含中间 mzML/msalign + `summary.json`,已扁平化、无冗余嵌套)+ **`<JobId>.zip`(完整结果包,保留供用户下载)**。返回的 `archive` 字段即该 zip 路径。
